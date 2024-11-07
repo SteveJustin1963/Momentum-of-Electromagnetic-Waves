@@ -1,0 +1,74 @@
+// Basic EM constants scaled for fixed point (x100 for 2 decimal precision)
+// Speed of light c = 299792458 m/s scaled to 29979
+// Epsilon0 (permittivity) = 8.854e-12 scaled to 885
+// Mu0 (permeability) = 1.257e-6 scaled to 126
+
+// Helper functions for APU math operations
+:M // Multiply with AM9511
+  #80 /O    // Send second number  
+  #80 /O    // Send first number
+  #12 #80 /O // MUL command
+  #80 /I    // Read result
+;
+
+:D // Divide with AM9511  
+  #80 /O    // Send divisor
+  #80 /O    // Send dividend
+  #13 #80 /O // DIV command
+  #80 /I    // Read result
+;
+
+// Calculate momentum density from energy density using p = U/c
+:P // Input: Energy density U on stack, Output: Momentum density 
+  29979 D    // Divide by c (scaled)
+;
+
+// Calculate energy density from E and B fields
+// U = (1/2)ε₀E² + (1/2μ₀)B²
+:U // Input: E field, B field on stack. Output: Energy density
+  " M        // Square E field (E²)
+  885 M      // Multiply by ε₀
+  2 D        // Divide by 2 for (1/2)ε₀E²
+  w !        // Store first term in w
+  
+  $          // Get B field value
+  " M        // Square B field (B²)
+  126 M      // Multiply by μ₀ 
+  2 D        // Divide by 2
+  
+  w +        // Add both terms for total energy density
+;
+
+// Calculate E field from B field in plane wave (E = cB)
+:E // Input: B field on stack. Output: E field
+  29979 M    // Multiply by c
+;
+
+// Calculate B field from E field in plane wave (B = E/c)
+:B // Input: E field on stack. Output: B field
+  29979 D    // Divide by c
+;
+
+// Calculate Poynting vector magnitude (S = E × B)
+:S // Input: E field, B field on stack. Output: Poynting vector magnitude
+  M          // Multiply E and B
+;
+
+// Calculate radiation pressure (P = U/c)
+:R // Input: Energy density U on stack. Output: Radiation pressure
+  29979 D    // Divide by c
+;
+
+// Example usage function 
+:X 
+  `Energy Density Example:` /N
+  1000 e!   // Example E field
+  e E b!    // Calculate corresponding B field
+  e b U .   // Calculate and print energy density
+  
+  `Momentum Density:` /N
+  e b U P . // Calculate and print momentum density
+  
+  `Radiation Pressure:` /N
+  e b U R . // Calculate and print radiation pressure
+;
