@@ -1,74 +1,215 @@
-// Basic EM constants scaled for fixed point (x100 for 2 decimal precision)
-// Speed of light c = 299792458 m/s scaled to 29979
-// Epsilon0 (permittivity) = 8.854e-12 scaled to 885
-// Mu0 (permeability) = 1.257e-6 scaled to 126
+// AM9511A EM Wave Calculator using native FP
+// Port 0x80: Data port
+// Port 0x81: Command/Status port
+// No wait polling needed - AM9511A handles Z80 wait states
 
-// Helper functions for APU math operations
-:M // Multiply with AM9511
-  #80 /O    // Send second number  
-  #80 /O    // Send first number
-  #12 #80 /O // MUL command
-  #80 /I    // Read result
+:P // Push floating point number to APU
+  // High byte first, then low byte for each word
+  $ 8 } #FF & // MSB of mantissa
+  #80 /O
+  " #FF &     // LSB of mantissa
+  #80 /O
+  $ 8 } #FF & // MSB of exponent
+  #80 /O
+  " #FF &     // LSB of exponent
+  #80 /O
 ;
 
-:D // Divide with AM9511  
-  #80 /O    // Send divisor
-  #80 /O    // Send dividend
-  #13 #80 /O // DIV command
-  #80 /I    // Read result
+:R // Read floating point result from APU
+  #80 /I      // Get 4 bytes in correct order
+  #80 /I
+  #80 /I
+  #80 /I
 ;
 
-// Calculate momentum density from energy density using p = U/c
-:P // Input: Energy density U on stack, Output: Momentum density 
-  29979 D    // Divide by c (scaled)
+// --- Basic FP Operations ---
+
+:M // Multiply
+  P           // Push first number
+  P           // Push second number
+  #12 #81 /O  // FMUL command
+  R           // Get result
 ;
 
-// Calculate energy density from E and B fields
-// U = (1/2)ε₀E² + (1/2μ₀)B²
-:U // Input: E field, B field on stack. Output: Energy density
-  " M        // Square E field (E²)
-  885 M      // Multiply by ε₀
-  2 D        // Divide by 2 for (1/2)ε₀E²
-  w !        // Store first term in w
+:D // Divide
+  P           // Push dividend
+  P           // Push divisor
+  #13 #81 /O  // FDIV command
+  R
+;
+
+:A // Add
+  P           // Push first number
+  P           // Push second number
+  #10 #81 /O  // FADD command
+  R
+;
+
+:Q // Square Root
+  P           // Push number
+  #05 #81 /O  // FSQRT command
+  R
+;
+
+// --- Constants (in FP format) ---
+
+:K // Initialize constants
+  // c = 299792458 (speed of light)
+  #42 c1!    // Exponent high
+  #96 c2!    // Exponent low
+  #11 c3!    // Mantissa high
+  #E4 c4!    // Mantissa low
+
+  // ε₀ = 8.854e-12
+  #34 e1!    // Exponent
+  #8E e2!
+  #05 e3!    // Mantissa
+  #BF e4!
+
+  // μ₀ = 1.257e-6
+  #3A m1!    // Exponent
+  #14 m2!
+  #09 m3!    // Mantissa
+  #D5 m4!
+;
+
+// --- EM Wave Calculations ---
+
+:E // Calculate E field from B field
+  // E = cB
+  c1 c2 c3 c4    // Load c
+  M              // Multiply
+;
+
+:B // Calculate B field from E field
+  // B = E/c
+  c1 c2 c3 c4    // Load c
+  D              // Divide
+;
+
+:U // Calculate energy density
+  // U = (1/2)(ε₀E² + B²/μ₀)
+  " M            // Square E field
+  e1 e2 e3 e4    // Load ε₀
+  M              // Multiply by ε₀
+  s !            // Store first term
   
-  $          // Get B field value
-  " M        // Square B field (B²)
-  126 M      // Multiply by μ₀ 
-  2 D        // Divide by 2
+  $ " M          // Square B field
+  m1 m2 m3 m4    // Load μ₀
+  D              // Divide by μ₀
   
-  w +        // Add both terms for total energy density
+  s A            // Add terms
+  2 D            // Divide by 2
 ;
 
-// Calculate E field from B field in plane wave (E = cB)
-:E // Input: B field on stack. Output: E field
-  29979 M    // Multiply by c
+:V // Calculate momentum density
+  // p = U/c
+  c1 c2 c3 c4    // Load c
+  D              // Divide
 ;
 
-// Calculate B field from E field in plane wave (B = E/c)
-:B // Input: E field on stack. Output: B field
-  29979 D    // Divide by c
+:Y // Calculate Poynting vector
+  // S = E×B/μ₀
+  M              // E×B
+  m1 m2 m3 m4    // Load μ₀
+  D              // Divide
 ;
 
-// Calculate Poynting vector magnitude (S = E × B)
-:S // Input: E field, B field on stack. Output: Poynting vector magnitude
-  M          // Multiply E and B
-;
+// --- Test Function ---
 
-// Calculate radiation pressure (P = U/c)
-:R // Input: Energy density U on stack. Output: Radiation pressure
-  29979 D    // Divide by c
-;
-
-// Example usage function 
-:X 
-  `Energy Density Example:` /N
-  1000 e!   // Example E field
-  e E b!    // Calculate corresponding B field
-  e b U .   // Calculate and print energy density
+:T // Test APU FP operations
+  `APU FP Test` /N
   
-  `Momentum Density:` /N
-  e b U P . // Calculate and print momentum density
+  // Test multiplication
+  1000 100 M     // 1000 * 100
+  `Mult result: ` . /N
   
-  `Radiation Pressure:` /N
-  e b U R . // Calculate and print radiation pressure
+  // Test division
+  1000 10 D      // 1000 / 10
+  `Div result: ` . /N
+  
+  // Test square root
+  100 Q          // sqrt(100)
+  `Sqrt result: ` . /N
 ;
+
+// --- Example Analysis ---
+
+:X // Example EM wave analysis
+  K              // Initialize constants
+  1000           // Example E field 1000 V/m
+  e!             // Store E field
+  
+  `EM Wave Analysis` /N
+  `Input E field: ` e . ` V/m` /N
+  
+  e B            // Calculate B field
+  `B field: ` . ` T` /N
+  b!             // Store B field
+  
+  e b U          // Calculate energy density
+  `Energy Density: ` . ` J/m³` /N
+  
+  u V            // Calculate momentum density
+  `Momentum Density: ` . ` kg/m²s` /N
+  
+  e b Y          // Calculate Poynting vector
+  `Poynting Vector: ` . ` W/m²` /N
+;
+
+//////////////////////////////////////////
+
+// First, load the entire program at the MINT prompt > 
+// Each function needs to be entered as a single line, no comments
+
+// 1. Load core functions
+:P $ 8 } #FF & #80 /O " #FF & #80 /O $ 8 } #FF & #80 /O " #FF & #80 /O ;
+:R #80 /I #80 /I #80 /I #80 /I ;
+:M P P #12 #81 /O R ;
+:D P P #13 #81 /O R ;
+:A P P #10 #81 /O R ;
+:Q P #05 #81 /O R ;
+
+// 2. Load constants - careful with hex values
+:K #42 c1! #96 c2! #11 c3! #E4 c4! #34 e1! #8E e2! #05 e3! #BF e4! #3A m1! #14 m2! #09 m3! #D5 m4! ;
+
+// 3. Load EM calculation functions
+:E c1 c2 c3 c4 M ;
+:B c1 c2 c3 c4 D ;
+:U " M e1 e2 e3 e4 M s ! $ " M m1 m2 m3 m4 D s A 2 D ;
+:V c1 c2 c3 c4 D ;
+:Y M m1 m2 m3 m4 D ;
+
+// 4. Load test function
+:T `APU FP Test` /N 1000 100 M `Mult result: ` . /N 1000 10 D `Div result: ` . /N 100 Q `Sqrt result: ` . /N ;
+
+// 5. Load analysis function
+:X K 1000 e! `EM Wave Analysis` /N `Input E field: ` e . ` V/m` /N e B `B field: ` . ` T` /N b! e b U `Energy Density: ` . ` J/m³` /N u V `Momentum Density: ` . ` kg/m²s` /N e b Y `Poynting Vector: ` . ` W/m²` /N ;
+
+// Now you can run different calculations:
+
+// Simple test of APU operations:
+> T
+
+// Full EM wave analysis with 1000 V/m field:
+> X
+
+// Individual calculations:
+
+// Calculate B field for E = 2000 V/m
+> 2000 B .
+
+// Calculate energy density for E = 1000 V/m and B = 0.33μT
+> 1000 33 U .
+
+// Calculate Poynting vector
+> 1000 33 Y .
+
+// To check constants are loaded:
+> c1 . c2 . c3 . c4 .
+
+// Test basic math operations:
+> 100 200 M .    // Multiply 100 by 200
+> 1000 10 D .    // Divide 1000 by 10
+> 100 Q .        // Square root of 100
+
