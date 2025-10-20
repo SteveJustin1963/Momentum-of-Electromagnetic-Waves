@@ -120,3 +120,26 @@ The chart will show the electric and magnetic energy densities contributions ove
 - Alternatively, if you’d prefer a different type of visualization (e.g., comparing total energy density vs. momentum density), let me know!
 
 Would you like me to adjust the chart with different parameters or add another type of visualization?
+
+
+# test1.m
+
+sj@sj-4177cto:~/Desktop$ octave 1.m
+
+=== Electromagnetic Wave Momentum Demo ===
+c = 2.998e+08 m/s   mu0 = 1.257e-06   eps0 = 8.854e-12
+
+Average energy density <u> = 4.427537e-08 J/m^3
+Average Poynting flux  <S> = 1.327342e+01 W/m^2                                                                                                                             
+Average momentum density <g> = <S>/c^2 = 1.476867e-16 kg/(m^2·s)                                                                                                            
+                                                                                                                                                                            
+Beam: P = 1 W  area = 0.0001 m^2  I = 1.000000e+04 W/m^2
+Radiation pressure: absorber = 3.335641e-05 Pa, mirror = 6.671282e-05 Pa
+Force on absorber = 3.335641e-09 N, mirror = 6.671282e-09 N
+
+Simulation complete — graphs will stay open.
+Close them manually when done.
+
+<img width="812" height="643" alt="image" src="https://github.com/user-attachments/assets/97ea823c-6ee6-4ae0-b296-d0a005791d83" />
+
+
