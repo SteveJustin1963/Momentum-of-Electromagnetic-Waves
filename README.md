@@ -106,54 +106,7 @@ To generate a chart visualizing the energy density contributions of electric and
 
 The chart will show the electric and magnetic energy densities contributions over time to illustrate their equal contributions, as highlighted in the repository.
 
-```chartjs
-{
-  "type": "line",
-  "data": {
-    "labels": [0, 0.83e-9, 1.67e-9, 2.5e-9, 3.33e-9, 4.17e-9, 5e-9, 5.83e-9, 6.67e-9, 7.5e-9, 8.33e-9, 9.17e-9, 1e-8],
-    "datasets": [
-      {
-        "label": "Electric Energy Density (J/m³)",
-        "data": [4.425e-12, 3.876e-12, 2.884e-12, 1.597e-12, 3.099e-13, 2.233e-14, 1.108e-12, 2.657e-12, 3.803e-12, 4.345e-12, 3.992e-12, 2.998e-12, 1.772e-12],
-        "borderColor": "#007bff",
-        "fill": false
-      },
-      {
-        "label": "Magnetic Energy Density (J/m³)",
-        "data": [4.425e-12, 3.876e-12, 2.884e-12, 1.597e-12, 3.099e-13, 2.233e-14, 1.108e-12, 2.657e-12, 3.803e-12, 4.345e-12, 3.992e-12, 2.998e-12, 1.772e-12],
-        "borderColor": "#dc3545",
-        "fill": false
-      }
-    ]
-  },
-  "options": {
-    "responsive": true,
-    "plugins": {
-      "title": {
-        "display": true,
-        "text": "Electric and Magnetic Energy Density in a Plane Electromagnetic Wave"
-      },
-      "legend": {
-        "position": "top"
-      }
-    },
-    "scales": {
-      "x": {
-        "title": {
-          "display": true,
-          "text": "Time (s)"
-        }
-      },
-      "y": {
-        "title": {
-          "display": true,
-          "text": "Energy Density (J/m³)"
-        }
-      }
-    }
-  }
-}
-```
+<img width="1059" height="581" alt="image" src="https://github.com/user-attachments/assets/84fc5faa-e171-4fd2-9f1b-f87e9e73c5c1" />
 
 ### Chart Explanation:
 - **Type**: Line chart, showing the variation of energy density over time.
