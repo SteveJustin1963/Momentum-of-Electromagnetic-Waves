@@ -125,8 +125,8 @@ Would you like me to adjust the chart with different parameters or add another t
 # test1.m
 
 sj@sj-4177cto:~/Desktop$ octave 1.m
-
-=== Electromagnetic Wave Momentum Demo ===
+```
+ Electromagnetic Wave Momentum Demo
 c = 2.998e+08 m/s   mu0 = 1.257e-06   eps0 = 8.854e-12
 
 Average energy density <u> = 4.427537e-08 J/m^3
@@ -139,6 +139,7 @@ Force on absorber = 3.335641e-09 N, mirror = 6.671282e-09 N
 
 Simulation complete — graphs will stay open.
 Close them manually when done.
+```
 
 <img width="812" height="643" alt="image" src="https://github.com/user-attachments/assets/97ea823c-6ee6-4ae0-b296-d0a005791d83" />
 
